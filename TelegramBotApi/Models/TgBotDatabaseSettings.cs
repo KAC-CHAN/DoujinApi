@@ -5,10 +5,7 @@ namespace TelegramBotApi.Models;
 /// </summary>
 public class TgBotDatabaseSettings
 {
-	/// <summary>
-	/// The connection string to the database
-	/// </summary>
-	public string ConnectionString { get; set; } = null!;
+	
 	/// <summary>
 	/// The name of the database
 	/// </summary>

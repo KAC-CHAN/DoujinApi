@@ -15,9 +15,10 @@ public class UserService
 	///  Constructor for the user service.
 	/// </summary>
 	/// <param name="settings"> Instance of database settings </param>
-	public UserService(IOptions<TgBotDatabaseSettings> settings)
+	/// <param name="env">Environement variables</param>
+	public UserService(IOptions<TgBotDatabaseSettings> settings,IOptions<Env> env)
 	{
-		var client = new MongoClient(settings.Value.ConnectionString);
+		var client = new MongoClient(env.Value.MongoConnectionString);
 		var database = client.GetDatabase(settings.Value.DatabaseName);
 		_users = database.GetCollection<User>(settings.Value.UsersCollectionName);
 	}

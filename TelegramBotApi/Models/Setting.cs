@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TelegramBotApi.Models;
@@ -78,5 +79,5 @@ public enum Source
 	/// <summary>
 	/// Exhentai source (also includes e-hentai).
 	/// </summary>
-	Exhentai = 0,
+	[Description("Exhentai")] Exhentai = 0,
 }

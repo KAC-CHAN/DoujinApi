@@ -1,3 +1,4 @@
+using System.Web;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using TelegramBotApi.Models;
@@ -13,9 +14,7 @@ namespace TelegramBotApi.Controllers;
 [Route("api/v1/[controller]")]
 public class DoujinsController
 {
-	
 	private readonly DoujinService _doujinService;
-	private readonly LoggerService _loggerService;
 	private readonly SettingService _settingService;
 	private readonly StatsService _statsService;
 
@@ -23,10 +22,12 @@ public class DoujinsController
 	///  Constructor for the doujins controller.
 	/// </summary>
 	/// <param name="doujinService">The DoujinService Object.</param>
-	public DoujinsController(DoujinService doujinService, LoggerService loggerService, SettingService settingService, StatsService statsService)
+	/// <param name="settingService">The SettingService Object.</param>
+	/// <param name="statsService">The StatsService Object.</param>
+	public DoujinsController(DoujinService doujinService, SettingService settingService,
+		StatsService statsService)
 	{
 		_doujinService = doujinService;
-		_loggerService = loggerService;
 		_settingService = settingService;
 		_statsService = statsService;
 	}
@@ -122,17 +123,62 @@ public class DoujinsController
 		await _doujinService.UpdateAsync(doujinIn);
 		return new OkResult();
 	}
-	
-	
-	[HttpGet("fetch/{url}")]
+
+	/// <summary>
+	/// Get a doujin by its url.
+	/// </summary>
+	/// <param name="url">The doujin's url</param>
+	/// <returns>A doujin.</returns>
+	[HttpPost("fetch/")]
 	[Produces("application/json")]
-	public async Task<Doujin> FetchDoujin(string url)
+	public async Task<Doujin> FetchDoujin([FromBody] string url)
 	{
-		return await Exhentai.GetDoujinAsync(url);
+		string decodedUrl = HttpUtility.UrlDecode(url);
+		var doujin = await Exhentai.GetDoujinAsync(decodedUrl, _settingService, _doujinService);
+
+		var stats = await _statsService.GetAsync();
+		stats.FetchUse++;
+		stats.TotalUse++;
+		return doujin;
 	}
-	
-	
-	
+
+	/// <summary>
+	/// Get a random doujin with or without tags.
+	/// </summary>
+	/// <param name="tags">The optional tags for the search.</param>
+	/// <returns>A random doujin.</returns>
+	[HttpPost("random/")]
+	[Produces("application/json")]
+	public async Task<Doujin> GetRandomDoujin([FromBody] string? tags)
+	{
+		tags ??= "";
+
+		(string tagsString, var positiveTags, var negativeTags) = Exhentai.ParseTags(tags);
+		string randomDoujinUrl = await Exhentai.GetRandomDoujinUrl(_settingService, tagsString);
+		Console.WriteLine(randomDoujinUrl);
+		var doujin = await Exhentai.GetDoujinAsync(randomDoujinUrl, _settingService, _doujinService);
+		var stats = await _statsService.GetAsync();
+		stats.RandomUse++;
+		stats.TotalUse++;
+		if (tags == "") return doujin;
+		foreach (string tag in positiveTags)
+		{
+			if (stats.Tags.Positive.ContainsKey(tag))
+				stats.Tags.Positive[tag]++;
+			else
+				stats.Tags.Positive.Add(tag, 1);
+		}
+
+		foreach (string tag in negativeTags)
+		{
+			if (stats.Tags.Negative.ContainsKey(tag))
+				stats.Tags.Negative[tag]++;
+			else
+				stats.Tags.Negative.Add(tag, 1);
+		}
+
+		await _statsService.UpdateAsync(stats);
+
+		return doujin;
+	}
 }
-
-

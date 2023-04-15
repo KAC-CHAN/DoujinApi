@@ -1,10 +1,14 @@
 using System.Reflection;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using TelegramBotApi.Middlewares;
 using TelegramBotApi.Models;
 using TelegramBotApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.Services.AddTransient<GlobalExeptionHandlerMiddleware>();
 
 builder.Services.Configure<TgBotDatabaseSettings>(
 	builder.Configuration.GetSection("TelegramBotDatabase")
@@ -15,6 +19,7 @@ builder.Services.Configure<Env>(
 	
 );
 
+BsonSerializer.RegisterSerializer(new EnumSerializer<Source>(BsonType.String));
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -60,6 +65,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
+
+app.UseMiddleware<GlobalExeptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 

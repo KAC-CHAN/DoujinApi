@@ -155,7 +155,6 @@ public class DoujinsController
 
 		(string tagsString, var positiveTags, var negativeTags) = Exhentai.ParseTags(tags);
 		string randomDoujinUrl = await Exhentai.GetRandomDoujinUrl(_settingService, tagsString);
-		Console.WriteLine(randomDoujinUrl);
 		var doujin = await Exhentai.GetDoujinAsync(randomDoujinUrl, _settingService, _doujinService);
 		var stats = await _statsService.GetAsync();
 		stats.RandomUse++;

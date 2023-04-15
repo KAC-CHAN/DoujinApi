@@ -44,7 +44,7 @@ public class Doujin
 	/// The doujin's posted date (Unix timestamp).
 	/// </summary>
 	[BsonElement("posted")]
-	public int Posted { get; set; } = 0;
+	public long Posted { get; set; } = 0;
 
 	/// <summary>
 	/// The doujin's category.

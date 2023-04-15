@@ -9,7 +9,7 @@ using TelegramBotApi.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTransient<GlobalExeptionHandlerMiddleware>();
-
+builder.Services.AddTransient<ApiKeyAuthMiddleware>();
 builder.Services.Configure<TgBotDatabaseSettings>(
 	builder.Configuration.GetSection("TelegramBotDatabase")
 );
@@ -33,6 +33,7 @@ builder.Services.AddSwaggerGen(c =>
 				Email = "caelestis.deimos@protonmail.com",
 				Url = new Uri("https://github.com/trueimmortal")
 			}
+
 		});
 	var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 	var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -60,8 +61,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
-
 app.UseMiddleware<GlobalExeptionHandlerMiddleware>();
+app.UseMiddleware<ApiKeyAuthMiddleware>();
 
 app.UseHttpsRedirection();
 

@@ -14,11 +14,6 @@ builder.Services.Configure<TgBotDatabaseSettings>(
 	builder.Configuration.GetSection("TelegramBotDatabase")
 );
 
-builder.Services.Configure<Env>(
-	builder.Configuration.GetSection("Env")
-	
-);
-
 BsonSerializer.RegisterSerializer(new EnumSerializer<Source>(BsonType.String));
 
 // Add services to the container.

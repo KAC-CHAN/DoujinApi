@@ -14,13 +14,12 @@ public class DoujinService
 	/// <summary>
 	/// Constructor for the doujin service.
 	/// </summary>
-	/// <param name="tgBotDatabaseSettings"> Instance of database settings. </param>
-	/// <param name="env">Environement variables</param>
-	public DoujinService(IOptions<TgBotDatabaseSettings> tgBotDatabaseSettings, IOptions<Env> env)
+	/// <param name="settings"> Instance of database settings. </param>
+	public DoujinService(IOptions<TgBotDatabaseSettings> settings)
 	{
-		var client = new MongoClient(env.Value.MongoConnectionString);
-		var database = client.GetDatabase(tgBotDatabaseSettings.Value.DatabaseName);
-		_doujinsCollection = database.GetCollection<Doujin>(tgBotDatabaseSettings.Value.DoujinsCollectionName);
+		var client = new MongoClient(settings.Value.ConnectionString);
+		var database = client.GetDatabase(settings.Value.DatabaseName);
+		_doujinsCollection = database.GetCollection<Doujin>(settings.Value.DoujinsCollectionName);
 	}
 
 	/// <summary>

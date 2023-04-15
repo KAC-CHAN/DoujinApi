@@ -16,10 +16,10 @@ public class StatsService
 	/// The constructor for the stats service.
 	/// </summary>
 	/// <param name="settings">The database settings</param>
-	/// <param name="env">Environement variables</param>
-	public StatsService(IOptions<TgBotDatabaseSettings> settings, LoggerService loggerService, IOptions<Env> env)
+	/// <param name="loggerService">Logging service</param>
+	public StatsService(IOptions<TgBotDatabaseSettings> settings, LoggerService loggerService)
 	{
-		var client = new MongoClient(env.Value.MongoConnectionString);
+		var client = new MongoClient(settings.Value.ConnectionString);;
 		var database = client.GetDatabase(settings.Value.DatabaseName);
 		_stats = database.GetCollection<Stats>(settings.Value.StatsCollectionName);
 		_loggerService = loggerService;

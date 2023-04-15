@@ -18,10 +18,9 @@ public class SettingService
 	/// </summary>
 	/// <param name="settings">The database settings</param>
 	/// <param name="loggerService">The logger service</param>
-	/// <param name="env">Environement variables</param>
-	public SettingService(IOptions<TgBotDatabaseSettings> settings, LoggerService loggerService, IOptions<Env> env)
+	public SettingService(IOptions<TgBotDatabaseSettings> settings, LoggerService loggerService)
 	{
-		var client = new MongoClient(env.Value.MongoConnectionString);
+		var client = new MongoClient(settings.Value.ConnectionString);
 		var database = client.GetDatabase(settings.Value.DatabaseName);
 		_settings = database.GetCollection<Setting>(settings.Value.SettingsCollectionName);
 		_loggerService = loggerService;

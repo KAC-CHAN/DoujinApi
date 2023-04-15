@@ -11,6 +11,10 @@ public class TgBotDatabaseSettings
 	/// </summary>
 	public string DatabaseName { get; set; } = null!;
 	/// <summary>
+	/// Connection string to the database.
+	/// </summary>
+	public string ConnectionString { get; set; } = null!;
+	/// <summary>
 	/// The name of the doujins collection
 	/// </summary>
 	public string DoujinsCollectionName { get; set; } = null!;

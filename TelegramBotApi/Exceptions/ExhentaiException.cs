@@ -67,6 +67,12 @@ public enum ExhentaiExceptionType
 	/// </summary>
 	[Description("Bad Page Error")]
 	BadPageRequest,
+	/// <summary>
+	/// No results were found for the search.
+	/// </summary>
+	[Description("No Results")]
+	NoResults,
+	
 	
 	
 	

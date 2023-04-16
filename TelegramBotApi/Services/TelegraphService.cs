@@ -37,7 +37,7 @@ public class TelegraphService
 	/// <returns>The updated doujin with the new image urls/telegraph link</returns>
 	public async Task<Doujin> CreatePageAsync(Doujin doujin)
 	{
-		string path = await Utils.DownloadDoujin.Download(doujin);
+		string path = await Utils.DoujinUtils.Download(doujin);
 
 		var imagesPaths = Directory.GetFiles(path);
 
@@ -78,8 +78,8 @@ public class TelegraphService
 					},
 				}
 			);
-
-			doujin.ImageUrls.Add(image.Link);
+			// Temporary fix until the Telegraph package owner fixes the links
+			doujin.ImageUrls.Add(image.Link.Replace("https:/", "https://"));
 		}
 
 		var page = await _telegraphClient.CreatePage(authorName: _authorName, authorUrl: _authorUrl, content: content,

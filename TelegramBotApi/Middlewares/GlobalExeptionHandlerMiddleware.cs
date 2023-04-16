@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Web;
+using Kvyk.Telegraph.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using TelegramBotApi.Exceptions;
 using TelegramBotApi.Services;
@@ -40,35 +41,33 @@ public class GlobalExeptionHandlerMiddleware : IMiddleware
 		{
 			await _loggerService.Log(LogLevel.Error, e.Message);
 			context.Response.ContentType = "application/json";
-			if (e is ExhentaiException exhentaiException)
+			var problem = new ProblemDetails();
+			
+			switch (e)
 			{
-				context.Response.StatusCode = (int) exhentaiException.HttpCode;
-
-				var problem = new ProblemDetails
-				{
-					Title = exhentaiException.Name.ToString(),
-					Detail = exhentaiException.Message,
-					Status = (int) exhentaiException.HttpCode,
-					Instance = HttpUtility.UrlDecode(context.Request.Path)
-				};
-
-				await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
-
+				case ExhentaiException exhentaiException:
+					context.Response.StatusCode = (int) exhentaiException.HttpCode;
+					problem.Title = exhentaiException.Name.ToString();
+					problem.Detail = exhentaiException.Message;
+					problem.Status = (int) exhentaiException.HttpCode;
+					problem.Instance = HttpUtility.UrlDecode(context.Request.Path);
+					break;
+				case TelegraphException telegraphException:
+					context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+					problem.Title = "TelegraphExceception";
+					problem.Detail = telegraphException.Message;
+					problem.Status = (int) HttpStatusCode.InternalServerError;
+					problem.Instance = HttpUtility.UrlDecode(context.Request.Path);
+					break;
+				default:
+					context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+					problem.Title = "Internal Server Error";
+					problem.Detail = e.Message;
+					problem.Status = (int) HttpStatusCode.InternalServerError;
+					problem.Instance = HttpUtility.UrlDecode(context.Request.Path);
+					break;
 			}
-			else
-			{
-				context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
-				
-				var problem = new ProblemDetails
-				{
-					Title = "Internal Server Error",
-					Detail = e.Message,
-					Status = (int) HttpStatusCode.InternalServerError,
-					Instance = HttpUtility.UrlDecode(context.Request.Path)
-				};
-				
-				await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
-			}
+			await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
 		}
 		
 	}

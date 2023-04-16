@@ -14,6 +14,10 @@ builder.Services.Configure<TgBotDatabaseSettings>(
 	builder.Configuration.GetSection("TelegramBotDatabase")
 );
 
+builder.Services.Configure<TelegraphSettings>(
+ 	builder.Configuration.GetSection("Telegraph")
+);
+
 BsonSerializer.RegisterSerializer(new EnumSerializer<Source>(BsonType.String));
 
 // Add services to the container.
@@ -47,6 +51,7 @@ builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<LogService>();
 builder.Services.AddSingleton<SettingService>();
 builder.Services.AddSingleton<StatsService>();
+builder.Services.AddSingleton<TelegraphService>();
 
 // Other services
 

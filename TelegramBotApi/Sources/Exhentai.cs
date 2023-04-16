@@ -145,7 +145,7 @@ public static class Exhentai
 			DoujinId = metadataDoujin.Gid.ToString(),
 			Rating = metadataDoujin.Rating,
 			Url = doujinUrl,
-			FileName = Regex.Replace(metadataDoujin.Title, @"[^a-zA-Z0-9]", "").Replace(" ", "_"),
+			FileName = Regex.Replace(metadataDoujin.Title, @"[^a-zA-Z0-9 ]", "").Replace(" ", "_"),
 			Posted = metadataDoujin.Posted,
 			Category = metadataDoujin.Category,
 			Title = metadataDoujin.Title,
@@ -182,15 +182,14 @@ public static class Exhentai
 
 		long maxUrls = Math.Min(galleryUrls.Count, settings.MaxFiles);
 
-		for (
-			int i = 0;
-			i < maxUrls;
-			i++)
+		var tasks = new List<Task<string>>();
+		
+		for (int i = 0; i < maxUrls; i++)
 		{
-			string galleryUrl = galleryUrls[i];
-			string imageUrl = await GetImageUrl(galleryUrl, httpClient);
-			imageUrls.Add(imageUrl);
+			tasks.Add(GetImageUrl(galleryUrls[i], httpClient));
 		}
+		
+		imageUrls.AddRange(await Task.WhenAll(tasks));
 
 		return imageUrls;
 	}
@@ -391,9 +390,10 @@ public static class Exhentai
 	{
 		var settings = await settingsService.GetAsync();
 
-		if (settings.Cookies[Source.Exhentai] == null)
-			throw new ExhentaiException("No cookies found", (int) HttpStatusCode.BadRequest,
+		if (!settings.Cookies.TryGetValue(Source.Exhentai, out _))
+			throw new ExhentaiException("No cookies found for exhentai.", (int) HttpStatusCode.BadRequest,
 				ExhentaiExceptionType.NoExhentaiCookies, "");
+		
 
 		var httpClient = new HttpClient
 		{

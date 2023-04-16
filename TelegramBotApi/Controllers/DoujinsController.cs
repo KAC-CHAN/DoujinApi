@@ -17,6 +17,7 @@ public class DoujinsController
 	private readonly DoujinService _doujinService;
 	private readonly SettingService _settingService;
 	private readonly StatsService _statsService;
+	private readonly TelegraphService _telegraphService;
 
 	/// <summary>
 	///  Constructor for the doujins controller.
@@ -24,12 +25,14 @@ public class DoujinsController
 	/// <param name="doujinService">The DoujinService Object.</param>
 	/// <param name="settingService">The SettingService Object.</param>
 	/// <param name="statsService">The StatsService Object.</param>
+	/// <param name="telegraphService">The TelegraphService Object.</param>
 	public DoujinsController(DoujinService doujinService, SettingService settingService,
-		StatsService statsService)
+		StatsService statsService, TelegraphService telegraphService)
 	{
 		_doujinService = doujinService;
 		_settingService = settingService;
 		_statsService = statsService;
+		_telegraphService = telegraphService;
 	}
 
 	/// <summary>
@@ -125,7 +128,7 @@ public class DoujinsController
 	}
 
 	/// <summary>
-	/// Get a doujin by its url.
+	/// Get a doujin by its url and post it to telegraph.
 	/// </summary>
 	/// <param name="url">The doujin's url</param>
 	/// <returns>A doujin.</returns>
@@ -139,11 +142,13 @@ public class DoujinsController
 		var stats = await _statsService.GetAsync();
 		stats.FetchUse++;
 		stats.TotalUse++;
+		doujin = await _telegraphService.CreatePageAsync(doujin);
+		await _doujinService.UpdateAsync(doujin);
 		return doujin;
 	}
 
 	/// <summary>
-	/// Get a random doujin with or without tags.
+	/// Get a random doujin with or without tags and post it to telegraph.
 	/// </summary>
 	/// <param name="tags">The optional tags for the search.</param>
 	/// <returns>A random doujin.</returns>
@@ -159,25 +164,66 @@ public class DoujinsController
 		var stats = await _statsService.GetAsync();
 		stats.RandomUse++;
 		stats.TotalUse++;
-		if (tags == "") return doujin;
-		foreach (string tag in positiveTags)
+		if (tags != "")
 		{
-			if (stats.Tags.Positive.ContainsKey(tag))
-				stats.Tags.Positive[tag]++;
-			else
-				stats.Tags.Positive.Add(tag, 1);
-		}
+			foreach (string tag in positiveTags)
+			{
+				if (stats.Tags.Positive.ContainsKey(tag))
+					stats.Tags.Positive[tag]++;
+				else
+					stats.Tags.Positive.Add(tag, 1);
+			}
 
-		foreach (string tag in negativeTags)
-		{
-			if (stats.Tags.Negative.ContainsKey(tag))
-				stats.Tags.Negative[tag]++;
-			else
-				stats.Tags.Negative.Add(tag, 1);
+			foreach (string tag in negativeTags)
+			{
+				if (stats.Tags.Negative.ContainsKey(tag))
+					stats.Tags.Negative[tag]++;
+				else
+					stats.Tags.Negative.Add(tag, 1);
+			}
 		}
 
 		await _statsService.UpdateAsync(stats);
-
+		doujin = await _telegraphService.CreatePageAsync(doujin);
+		await _doujinService.UpdateAsync(doujin);
 		return doujin;
+
 	}
+
+	/// User request a doujin to be ziped and sent to him.
+	[HttpGet("zip/{id:length(24)}")]
+	public async Task<IActionResult> ZipDoujin(string id)
+	{
+		var doujin = await _doujinService.GetAsyncDocId(id);
+		if (doujin == null)
+			return new NotFoundResult();
+
+		var stats = await _statsService.GetAsync();
+		stats.TotalUse++;
+		await _statsService.UpdateAsync(stats);
+		string zipDoujin = await Utils.DoujinUtils.ZipDoujin(doujin);
+		
+		byte[] zip = await System.IO.File.ReadAllBytesAsync(zipDoujin);
+		
+		
+		return new FileContentResult(zip, "application/zip")
+		{
+			FileDownloadName = $"{doujin.DoujinId}.zip"
+		};
+	}
+	
+	/// <summary>
+	/// Get the number of views for a given Telegraph URL.
+	/// </summary>
+	/// <param name="url">The telegraph url.</param>
+	/// <returns>The number of views.</returns>
+	[HttpGet("views/{url}")]
+	public async Task<ActionResult<int>> GetTpViews(string url)
+	{
+		var views = await _telegraphService.GetPageViews(HttpUtility.UrlDecode(url));
+
+		return views;
+	}
+
+	
 }

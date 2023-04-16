@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.OpenApi.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -22,7 +23,6 @@ BsonSerializer.RegisterSerializer(new EnumSerializer<Source>(BsonType.String));
 
 // Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -42,6 +42,27 @@ builder.Services.AddSwaggerGen(c =>
 	var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 	var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 	c.IncludeXmlComments(xmlPath);
+	c.AddSecurityDefinition("ApiKey", new()
+	{
+		Name = "X-Api-Key",
+		Description = "API Key",
+		Scheme = "ApiKeyScheme",
+		In = ParameterLocation.Header,
+		Type = SecuritySchemeType.ApiKey
+	});
+	var scheme = new OpenApiSecurityScheme
+	{
+		Reference = new OpenApiReference
+		{
+			Type = ReferenceType.SecurityScheme,
+			Id = "ApiKey"
+		},
+		In = ParameterLocation.Header
+	};
+	c.AddSecurityRequirement(new OpenApiSecurityRequirement
+	{
+		{scheme, new string[] { }}
+		});
 });
 
 

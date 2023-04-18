@@ -325,9 +325,12 @@ public static class Exhentai
 	/// <exception cref="ExhentaiException">If no doujins are found.</exception>
 	public static async Task<string> GetRandomDoujinUrl(SettingService settingsService, string tagsString)
 	{
+		var domains = new List<string> {"https://exhentai.org", "https://e-hentai.org"};
+		var randomDomain = domains[new Random().Next(0, domains.Count - 1)];
+		
 		var (httpClient, settings) = await GetHttpClientAndSettings(settingsService);
 		string searchUrl =
-			$"https://exhentai.org/?f_search=language:english{tagsString}&advsearch=1&f_srdd=4&f_spf=1&f_spt={settings.MaxFiles}";
+			$"https://{randomDomain}/?f_search=language:english{tagsString}&advsearch=1&f_srdd=4&f_spf=1&f_spt={settings.MaxFiles}";
 		var pageLimit = await GetPageLimit(searchUrl, httpClient);
 		var randomPrevNumber = new Random().Next(0, pageLimit - 1);
 

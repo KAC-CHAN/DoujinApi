@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
 using TelegramBotApi.Models;
@@ -41,7 +42,29 @@ public static class  DoujinUtils
 
 		string filePath = Path.Combine(path, $"{index}.{url.Split('.').Last()}");
 
-		byte[] result = await client.GetByteArrayAsync(url);
+		byte[] result;
+		try
+		{
+			result = await client.GetByteArrayAsync(url);
+		}
+		catch (Exception e)
+		{
+			var process = new Process
+			{
+				StartInfo = new ProcessStartInfo
+				{
+					FileName = "wget",
+					Arguments = $"-O {filePath} {url}",
+					UseShellExecute = false,
+					RedirectStandardOutput = true,
+					CreateNoWindow = true
+				}
+			};
+			process.Start();
+			await process.WaitForExitAsync();
+			
+			return filePath;
+		}
 
 		await File.WriteAllBytesAsync(filePath, result);
 
@@ -94,4 +117,19 @@ public static class  DoujinUtils
 
 		return dateTimeOffset.LocalDateTime.ToString(CultureInfo.InvariantCulture);
 	}
+	
+	/**
+	 * Clean up work directories.
+	 */
+	public static bool CleanUpWorkDirs()
+	{
+		// Delete doujins folder and zips folder
+		DirectoryInfo doujinsDir = new DirectoryInfo("doujins");
+		DirectoryInfo zipsDir = new DirectoryInfo("zips");
+		foreach (DirectoryInfo dir in doujinsDir.GetDirectories()) dir.Delete(true);
+		foreach (DirectoryInfo dir in zipsDir.GetDirectories()) dir.Delete(true);
+		return true;
+	}
+	
+	
 }

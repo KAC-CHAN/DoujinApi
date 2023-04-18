@@ -42,21 +42,20 @@ public static class Exhentai
 	public static async Task<Doujin> GetDoujinAsync(string doujinUrl, SettingService settingsService,
 		DoujinService doujinService)
 	{
-		var (httpClient, settings) = await GetHttpClientAndSettings(settingsService);
-
-
 		var urlReg = new Regex(@"^https:\/\/(e-hentai|exhentai)\.org\/g\/");
 		if (!urlReg.IsMatch(doujinUrl))
 			throw new ExhentaiException("Invalid url", (int) HttpStatusCode.BadRequest,
 				ExhentaiExceptionType.InvalidDoujinUrl, "");
-
+		
 		(int id, string token, string domain) = ParseUrl(doujinUrl);
-
+		
 		var doujin = await doujinService.GetAsyncId(id.ToString());
 
 		if (doujin != null)
 			return doujin;
-
+		
+		var (httpClient, settings) = await GetHttpClientAndSettings(settingsService,domain);
+		
 		var metadata = await GetMetadata(id, token, domain, httpClient);
 
 		doujin = await ConstructDoujin(metadata, settings, doujinUrl, httpClient);
@@ -385,13 +384,14 @@ public static class Exhentai
 	///  Get the http client and the settings.
 	/// </summary>
 	/// <param name="settingsService">The settings database service.</param>
+	///  <param name="domain">The domain to use (exhentai or e-hentai) defaults to exhentai</param>
 	/// <returns>The configured Http client and the bot's settings.</returns>
 	/// <exception cref="ExhentaiException">If no cookies are in the settings.</exception>
-	private static async Task<(HttpClient, Setting)> GetHttpClientAndSettings(SettingService settingsService)
+	private static async Task<(HttpClient, Setting)> GetHttpClientAndSettings(SettingService settingsService,string domain = "exhentai.org")
 	{
 		var settings = await settingsService.GetAsync();
 
-		if (!settings.Cookies.TryGetValue(Source.Exhentai, out _))
+		if (!settings.Cookies.TryGetValue(Source.Exhentai, out _) && domain == "exhentai.org")
 			throw new ExhentaiException("No cookies found for exhentai.", (int) HttpStatusCode.BadRequest,
 				ExhentaiExceptionType.NoExhentaiCookies, "");
 		
@@ -404,7 +404,7 @@ public static class Exhentai
 					"User-Agent",
 					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 				},
-				{"Cookie", settings.Cookies[Source.Exhentai]}
+				{"Cookie", domain == "exhentai.org" ? settings.Cookies[Source.Exhentai] : ""}
 			},
 		};
 

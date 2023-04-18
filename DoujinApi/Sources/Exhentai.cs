@@ -330,7 +330,7 @@ public static class Exhentai
 		
 		var (httpClient, settings) = await GetHttpClientAndSettings(settingsService);
 		string searchUrl =
-			$"https://{randomDomain}/?f_search=language:english{tagsString}&advsearch=1&f_srdd=4&f_spf=1&f_spt={settings.MaxFiles}";
+			$"{randomDomain}/?f_search=language:english{tagsString}&advsearch=1&f_srdd=4&f_spf=1&f_spt={settings.MaxFiles}";
 		var pageLimit = await GetPageLimit(searchUrl, httpClient);
 		var randomPrevNumber = new Random().Next(0, pageLimit - 1);
 

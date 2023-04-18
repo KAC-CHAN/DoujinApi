@@ -5,16 +5,16 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["TelegramBotApi/TelegramBotApi.csproj", "TelegramBotApi/"]
-RUN dotnet restore "TelegramBotApi/TelegramBotApi.csproj"
+COPY ["DoujinApi/DoujinApi.csproj", "DoujinApi/"]
+RUN dotnet restore "DoujinApi/DoujinApi.csproj"
 COPY . .
-WORKDIR "/src/TelegramBotApi"
-RUN dotnet build "TelegramBotApi.csproj" -c Release -o /app/build
+WORKDIR "/src/DoujinApi"
+RUN dotnet build "DoujinApi.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "TelegramBotApi.csproj" -c Release -o /app/publish
+RUN dotnet publish "DoujinApi.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "TelegramBotApi.dll"]
+ENTRYPOINT ["dotnet", "DoujinApi.dll"]

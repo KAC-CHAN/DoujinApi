@@ -90,7 +90,6 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GlobalExeptionHandlerMiddleware>();
 app.UseMiddleware<ApiKeyAuthMiddleware>();
 
-app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

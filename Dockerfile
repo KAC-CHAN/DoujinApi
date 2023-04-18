@@ -16,6 +16,6 @@ RUN dotnet publish "DoujinApi.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
-RUN apt update && apt install wget
+RUN apt update && apt install wget -y
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DoujinApi.dll"]

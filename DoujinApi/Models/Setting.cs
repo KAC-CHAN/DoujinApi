@@ -21,13 +21,13 @@ public class Setting
 	/// </summary>
 	[BsonElement("name")]
 	public string Name { get; set; } = "settings";
- 
+
 	/// <summary>
 	/// The bot's owner id.
 	/// </summary>
 	[BsonElement("owner_id")]
 	public long OwnerId { get; set; } = 0;
-	
+
 	/// <summary>
 	/// The users whitelist (no daily limits).
 	/// </summary>
@@ -89,7 +89,12 @@ public class Setting
 public enum Source
 {
 	/// <summary>
-	/// Exhentai source (also includes e-hentai).
+	/// Exhentai source.
 	/// </summary>
 	[Description("Exhentai")] Exhentai = 0,
+
+	/// <summary>
+	/// E-hentai source.
+	/// </summary>
+	[Description("EHentai")] EHentai = 1,
 }

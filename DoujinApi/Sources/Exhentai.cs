@@ -154,7 +154,7 @@ public static class Exhentai
 			ImageUrls = imageUrls,
 			Thumbnail = metadataDoujin.Thumb,
 			TelegraphUrl = "",
-			Source = Source.Exhentai
+			Source = doujinUrl.Contains("exhentai") ? Source.Exhentai : Source.EHentai
 		};
 	}
 
@@ -407,7 +407,7 @@ public static class Exhentai
 					"User-Agent",
 					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 				},
-				{"Cookie", domain == "exhentai.org" ? settings.Cookies[Source.Exhentai] : ""}
+				{"Cookie", domain == "exhentai.org" ? settings.Cookies[Source.Exhentai] : "none"}
 			},
 		};
 

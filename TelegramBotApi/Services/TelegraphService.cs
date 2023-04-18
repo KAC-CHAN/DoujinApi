@@ -81,6 +81,7 @@ public class TelegraphService
 			// Temporary fix until the Telegraph package owner fixes the links
 			doujin.ImageUrls.Add(image.Link.Replace("https:/", "https://"));
 		}
+		doujin.Thumbnail = doujin.ImageUrls.First();
 
 		var page = await _telegraphClient.CreatePage(authorName: _authorName, authorUrl: _authorUrl, content: content,
 			title: doujin.Title);

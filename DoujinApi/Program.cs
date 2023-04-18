@@ -99,7 +99,7 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 app.UseMiddleware<GlobalExeptionHandlerMiddleware>();
-// app.UseMiddleware<ApiKeyAuthMiddleware>();
+app.UseMiddleware<ApiKeyAuthMiddleware>();
 
 
 app.UseAuthorization();

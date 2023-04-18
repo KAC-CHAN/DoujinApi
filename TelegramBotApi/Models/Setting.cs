@@ -21,12 +21,18 @@ public class Setting
 	/// </summary>
 	[BsonElement("name")]
 	public string Name { get; set; } = "settings";
-
+ 
+	/// <summary>
+	/// The bot's owner id.
+	/// </summary>
+	[BsonElement("owner_id")]
+	public long OwnerId { get; set; } = 0;
+	
 	/// <summary>
 	/// The users whitelist (no daily limits).
 	/// </summary>
 	[BsonElement("whitelist_users")]
-	public List<int> WhitelistUsers { get; set; } = new();
+	public List<long> WhitelistUsers { get; set; } = new();
 
 	/// <summary>
 	/// The groups that can use the bot.
@@ -38,13 +44,19 @@ public class Setting
 	/// The loading messages.
 	/// </summary>
 	[BsonElement("loading_messages")]
-	public List<string> LoadingMessages { get; set; } = new();
+	public List<string> LoadingMessages { get; set; } = new()
+	{
+		"Loading...",
+	};
 
 	/// <summary>
 	/// The loading gifs.
 	/// </summary>
 	[BsonElement("loading_gifs")]
-	public List<string> LoadingGifs { get; set; } = new();
+	public List<string> LoadingGifs { get; set; } = new()
+	{
+		"https://i.pinimg.com/originals/64/0f/da/640fda7bcdf69371d0d3ee65e17974f0.gif"
+	};
 
 	/// <summary>
 	/// The max daily use per non whitelisted user.

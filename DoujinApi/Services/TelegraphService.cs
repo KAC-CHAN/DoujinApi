@@ -4,7 +4,7 @@ using Kvyk.Telegraph;
 using Kvyk.Telegraph.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using TelegramBotApi.Models;
+using DoujinApi.Models;
 
 namespace DoujinApi.Services;
 

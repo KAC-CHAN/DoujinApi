@@ -13,11 +13,11 @@
   </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DocumentationFile>bin\Release\net7.0\TelegramBotApi.xml</DocumentationFile>
+      <DocumentationFile>bin\Release\net7.0\DoujinApi.xml</DocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DocumentationFile>bin\Debug\net7.0\TelegramBotApi.xml</DocumentationFile>
+      <DocumentationFile>bin\Debug\net7.0\DoujinApi.xml</DocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>

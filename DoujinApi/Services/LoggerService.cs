@@ -1,5 +1,5 @@
 using DoujinApi.Models;
-using TelegramBotApi.Models;
+using DoujinApi.Models;
 using LogLevel = DoujinApi.Models.LogLevel;
 
 namespace DoujinApi.Services;

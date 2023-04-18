@@ -30,7 +30,7 @@ builder.Services.AddSwaggerGen(c =>
 	c.SwaggerDoc("v1",
 		new()
 		{
-			Title = "DoujinApiTelegramBotApi", Version = "v1",
+			Title = "DoujinApi", Version = "v1",
 			Description = "API to scrape doujins from exhentai and store them in a database.",
 			Contact = new()
 			{
@@ -89,7 +89,7 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI();
 }
 app.UseMiddleware<GlobalExeptionHandlerMiddleware>();
-app.UseMiddleware<ApiKeyAuthMiddleware>();
+// app.UseMiddleware<ApiKeyAuthMiddleware>();
 
 
 app.UseAuthorization();

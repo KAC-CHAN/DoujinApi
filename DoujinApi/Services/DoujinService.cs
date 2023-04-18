@@ -1,7 +1,7 @@
 using DoujinApi.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using TelegramBotApi.Models;
+using DoujinApi.Models;
 
 namespace DoujinApi.Services;
 

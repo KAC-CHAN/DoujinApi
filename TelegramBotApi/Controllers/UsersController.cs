@@ -58,7 +58,6 @@ public class UsersController
 	[HttpGet("userId/{id:long}")]
 	public async Task<ActionResult<User>> GetId(long id)
 	{
-		Console.Write(id);
 		var user = await _userService.GetAsyncId(id);
 		if(user == null)
 			return new NotFoundResult();
@@ -73,6 +72,10 @@ public class UsersController
 	[HttpPost]
 	public async Task<IActionResult> Create(User user)
 	{
+		var existingUser = await _userService.GetAsyncId(user.UserId);
+		if(existingUser != null)
+			return new ConflictResult();
+		
 		await _userService.CreateAsync(user);
 
 		return new CreatedResult($"/api/v1/users/{user.Id}", user);

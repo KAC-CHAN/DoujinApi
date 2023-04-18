@@ -10,6 +10,16 @@ using DoujinApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (!Directory.Exists("zips"))
+{
+	Directory.CreateDirectory("zips");
+}
+
+if (!Directory.Exists("doujins"))
+{
+	Directory.CreateDirectory("doujins");
+}
+
 builder.Services.AddTransient<GlobalExeptionHandlerMiddleware>();
 builder.Services.AddTransient<ApiKeyAuthMiddleware>();
 builder.Services.Configure<TgBotDatabaseSettings>(

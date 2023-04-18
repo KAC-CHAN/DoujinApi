@@ -121,6 +121,47 @@ enum Source
 
 ### /settings
 
+#### Schema
+
+```json
+
+{
+  "id": "string",
+  "name": "string",
+  "ownerId": 0,
+  "whitelistUsers": [
+    0
+  ],
+  "whitelistGroups": [
+    0
+  ],
+  "loadingMessages": [
+    "string"
+  ],
+  "loadingGifs": [
+    "string"
+  ],
+  "maxDailyUse": 0,
+  "maxFiles": 0,
+  "allowedCommandsGroups": {
+    "additionalProp1": [
+      "string"
+    ],
+    "additionalProp2": [
+      "string"
+    ],
+    "additionalProp3": [
+      "string"
+    ]
+  },
+  "cookies": {
+    "[source]": "string"
+  }
+}
+
+
+```
+
 `GET /settings/` - Get settings , they are created automatically if they don't exist. There can only be one settings document.
 
 `DELETE /settings/{id}` - Delete settings by `_id`. 

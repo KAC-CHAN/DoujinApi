@@ -17,7 +17,7 @@ public class LogService
 	/// The constructor for the log service.
 	/// </summary>
 	/// <param name="settings"></param>
-	public LogService(IOptions<TgBotDatabaseSettings> settings)
+	public LogService(IOptions<DatabaseSettings> settings)
 	{
 		var client = new MongoClient(settings.Value.ConnectionString);
 		var database = client.GetDatabase(settings.Value.DatabaseName);

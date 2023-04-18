@@ -3,7 +3,7 @@ namespace DoujinApi.Models;
 /// <summary>
 /// The settings for the database.
 /// </summary>
-public class TgBotDatabaseSettings
+public class DatabaseSettings
 {
 	
 	/// <summary>

@@ -19,7 +19,7 @@ public class SettingService
 	/// </summary>
 	/// <param name="settings">The database settings</param>
 	/// <param name="loggerService">The logger service</param>
-	public SettingService(IOptions<TgBotDatabaseSettings> settings, LoggerService loggerService)
+	public SettingService(IOptions<DatabaseSettings> settings, LoggerService loggerService)
 	{
 		var client = new MongoClient(settings.Value.ConnectionString);
 		var database = client.GetDatabase(settings.Value.DatabaseName);

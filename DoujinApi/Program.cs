@@ -22,8 +22,8 @@ if (!Directory.Exists("doujins"))
 
 builder.Services.AddTransient<GlobalExeptionHandlerMiddleware>();
 builder.Services.AddTransient<ApiKeyAuthMiddleware>();
-builder.Services.Configure<TgBotDatabaseSettings>(
-	builder.Configuration.GetSection("TelegramBotDatabase")
+builder.Services.Configure<DatabaseSettings>(
+	builder.Configuration.GetSection("DoujinApiDatabase")
 );
 
 builder.Services.Configure<TelegraphSettings>(

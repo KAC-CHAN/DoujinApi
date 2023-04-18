@@ -1,9 +1,9 @@
 using System.Web;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using TelegramBotApi.Models;
 using TelegramBotApi.Services;
 using TelegramBotApi.Sources;
+using TelegramBotApi.Utils;
 
 namespace TelegramBotApi.Controllers;
 
@@ -134,17 +134,20 @@ public class DoujinsController
 	/// <returns>A doujin.</returns>
 	[HttpPost("fetch/")]
 	[Produces("application/json")]
-	public async Task<Doujin> FetchDoujin([FromBody] string url)
+	public async Task<ActionResult> FetchDoujin([FromBody] string url)
 	{
 		string decodedUrl = HttpUtility.UrlDecode(url);
 		var doujin = await Exhentai.GetDoujinAsync(decodedUrl, _settingService, _doujinService);
-
+		if (doujin.TelegraphUrl != "")// Doujin already posted send it back with a 200
+			return new OkObjectResult(doujin);
+		
 		var stats = await _statsService.GetAsync();
 		stats.FetchUse++;
 		stats.TotalUse++;
 		doujin = await _telegraphService.CreatePageAsync(doujin);
 		await _doujinService.UpdateAsync(doujin);
-		return doujin;
+		DoujinUtils.CleanUpWorkDirs();
+		return new CreatedResult($"/api/v1/doujins/{doujin.Id}", doujin);
 	}
 
 	/// <summary>
@@ -154,13 +157,15 @@ public class DoujinsController
 	/// <returns>A random doujin.</returns>
 	[HttpPost("random/")]
 	[Produces("application/json")]
-	public async Task<Doujin> GetRandomDoujin([FromBody] string? tags)
+	public async Task<ActionResult> GetRandomDoujin([FromBody] string? tags)
 	{
 		tags ??= "";
 
 		(string tagsString, var positiveTags, var negativeTags) = Exhentai.ParseTags(tags);
 		string randomDoujinUrl = await Exhentai.GetRandomDoujinUrl(_settingService, tagsString);
 		var doujin = await Exhentai.GetDoujinAsync(randomDoujinUrl, _settingService, _doujinService);
+		if (doujin.TelegraphUrl != "")// Doujin already posted send it back with a 200
+			return new OkObjectResult(doujin);
 		var stats = await _statsService.GetAsync();
 		stats.RandomUse++;
 		stats.TotalUse++;
@@ -186,7 +191,8 @@ public class DoujinsController
 		await _statsService.UpdateAsync(stats);
 		doujin = await _telegraphService.CreatePageAsync(doujin);
 		await _doujinService.UpdateAsync(doujin);
-		return doujin;
+		DoujinUtils.CleanUpWorkDirs();
+		return new CreatedResult($"/api/v1/doujins/{doujin.Id}", doujin);
 
 	}
 
@@ -201,11 +207,11 @@ public class DoujinsController
 		var stats = await _statsService.GetAsync();
 		stats.TotalUse++;
 		await _statsService.UpdateAsync(stats);
-		string zipDoujin = await Utils.DoujinUtils.ZipDoujin(doujin);
+		string zipDoujin = await DoujinUtils.ZipDoujin(doujin);
 		
-		byte[] zip = await System.IO.File.ReadAllBytesAsync(zipDoujin);
+		byte[] zip = await File.ReadAllBytesAsync(zipDoujin);
 		
-		
+		DoujinUtils.CleanUpWorkDirs();
 		return new FileContentResult(zip, "application/zip")
 		{
 			FileDownloadName = $"{doujin.DoujinId}.zip"

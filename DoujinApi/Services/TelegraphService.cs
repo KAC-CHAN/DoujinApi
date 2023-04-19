@@ -99,9 +99,8 @@ public class TelegraphService
 			doujin.ImageUrls.Add(image.Link.Replace("https:/", "https://"));
 		}
 		doujin.Thumbnail = doujin.ImageUrls.First();
-
 		var page = await _telegraphClient.CreatePage(authorName: _authorName, authorUrl: _authorUrl, content: content,
-			title: doujin.Title.Substring(0,200));
+			title: doujin.Title.Length > 200 ? doujin.Title.Substring(0, 200) : doujin.Title);
 
 		if (page == null)
 			throw new Exception("Failed to create telegraph page.");

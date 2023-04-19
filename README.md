@@ -6,6 +6,8 @@ The reason behind posting to telegra.ph is because of the instant view feature i
 
 **Note : If you plan on using my Telegram Bot, this is the API you need in order to use it.**
 
+**Note 2 : Posting to telegraph is kind of problematic at times. If it fails once don't even try again, some doujins just don't want to be on there apparently lol, i need to find an alternative. For now I will work on decoupling the /fetch and /random commands from telegraph**
+
 ## Features
 
 - [x] Scrape doujins from exhentai/e-hentai by URL
@@ -19,7 +21,7 @@ The reason behind posting to telegra.ph is because of the instant view feature i
 ## Possible new features
 - [ ] Alternative doujin sources
 - [ ] More in-depth stats
-- [ ] Other posting sources (other than telegra.ph)
+- [ ] Other posting sources (other than telegra.ph) <--- Telegra.ph causes more problems than it solves tbh.
 
 ## Dependencies
 

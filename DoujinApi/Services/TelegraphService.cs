@@ -5,6 +5,8 @@ using Kvyk.Telegraph.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using DoujinApi.Models;
+using Newtonsoft.Json;
+using LogLevel = DoujinApi.Models.LogLevel;
 
 namespace DoujinApi.Services;
 
@@ -16,12 +18,14 @@ public class TelegraphService
 	private readonly TelegraphClient _telegraphClient;
 	private readonly string _authorName;
 	private readonly string _authorUrl;
+	private readonly LoggerService _loggerService;
 
 	/// <summary>
 	/// The telegraph service constructor
 	/// </summary>
 	/// <param name="settings">The telegraph settings.</param>
-	public TelegraphService(IOptions<TelegraphSettings> settings)
+	///  <param name="loggerService">The logger service.</param>
+	public TelegraphService(IOptions<TelegraphSettings> settings, LoggerService loggerService)
 	{
 		_telegraphClient = new TelegraphClient
 		{
@@ -29,6 +33,7 @@ public class TelegraphService
 		};
 		_authorName = settings.Value.AuthorName;
 		_authorUrl = settings.Value.AuthorUrl;
+		_loggerService = loggerService;
 	}
 
 
@@ -63,8 +68,18 @@ public class TelegraphService
 			});
 		}
 
-		var images = await _telegraphClient.UploadFiles(telegraphFiles);
-
+		var images = new List<TelegraphFile>();
+		try
+		{
+			images = await _telegraphClient.UploadFiles(telegraphFiles);
+		}
+		catch (JsonReaderException e)
+		{
+			await _loggerService.Log(LogLevel.Error,$"Failed to upload images to telegraph: {doujin.DoujinId}");
+		}
+		if(images == null || images.Count == 0)
+			throw new Exception("Failed to upload images to telegraph");
+		
 		var content = new List<Node>();
 
 		doujin.ImageUrls.Clear();

@@ -71,7 +71,10 @@ public class TelegraphService
 		var images = new List<TelegraphFile>();
 		try
 		{
-			images = await _telegraphClient.UploadFiles(telegraphFiles);
+			for (int i = 0; i < telegraphFiles.Count; i += 10)
+			{
+				images.AddRange(await _telegraphClient.UploadFiles(telegraphFiles.Skip(i).Take(10).ToList()));
+			}
 		}
 		catch (JsonReaderException e)
 		{

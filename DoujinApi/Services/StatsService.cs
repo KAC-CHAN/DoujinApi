@@ -29,42 +29,46 @@ public class StatsService
 	/// <summary>
 	/// Get the stats from the database. If no stats are found, create a new one .
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The stats document.</returns>
-	public async Task<Stats> GetAsync()
+	public async Task<Stats> GetAsync(CancellationToken ct)
 	{
-		var stats = await _stats.Find(stat => stat.Name == "stats").FirstOrDefaultAsync();
+		var stats = await _stats.Find(stat => stat.Name == "stats").FirstOrDefaultAsync(cancellationToken: ct);
 		if (stats != null) return stats;
 		
 		stats = new Stats();
 		await CreateAsync(stats);
-		await _loggerService.Log(LogLevel.Info, "No stats detected, creating stats...");
+		await _loggerService.Log(LogLevel.Info, "No stats detected, creating stats...", ct);
 		return stats;
 	}
 	
 	/// <summary>
 	/// Create a stats document inside the database.
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <param name="stats">The new stats document.</param>
-	private async Task CreateAsync(Stats stats)
+	private async Task CreateAsync(Stats stats, CancellationToken ct = default)
 	{
-		await _stats.InsertOneAsync(stats);
+		await _stats.InsertOneAsync(stats, cancellationToken: ct);
 	}
 	/// <summary>
 	/// Update a stats document in the database.
 	/// </summary>
 	/// <param name="stats">The updated stats document.</param>
-	public async Task UpdateAsync(Stats stats)
+	/// <param name="ct">Cancellation token</param>
+	public async Task UpdateAsync(Stats stats, CancellationToken ct )
 	{
-		await _stats.ReplaceOneAsync(stat => stat.Id == stats.Id, stats);
+		await _stats.ReplaceOneAsync(stat => stat.Id == stats.Id, stats, cancellationToken: ct);
 	}
 	
 	/// <summary>
 	/// Delete a stats document from the database.
 	/// </summary>
 	/// <param name="id">The stats's document ID.</param>
-	public async Task DeleteAsync(string id)
+	/// <param name="ct">Cancellation token</param>
+	public async Task DeleteAsync(string id, CancellationToken ct)
 	{
-		await _stats.DeleteOneAsync(stat => stat.Id == id);
+		await _stats.DeleteOneAsync(stat => stat.Id == id, cancellationToken: ct);
 	}
 	
 	

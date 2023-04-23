@@ -37,10 +37,11 @@ public static class Exhentai
 	/// <param name="doujinUrl">The doujin's url.</param>
 	/// <param name="settingsService">The bot's settings database service.</param>
 	/// <param name="doujinService">The doujin's database service.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>A doujin</returns>
 	/// <exception cref="ExhentaiException"></exception>
 	public static async Task<Doujin> GetDoujinAsync(string doujinUrl, SettingService settingsService,
-		DoujinService doujinService)
+		DoujinService doujinService, CancellationToken ct)
 	{
 		var urlReg = new Regex(@"^https:\/\/(e-hentai|exhentai)\.org\/g\/");
 		if (!urlReg.IsMatch(doujinUrl))
@@ -49,18 +50,18 @@ public static class Exhentai
 		
 		(int id, string token, string domain) = ParseUrl(doujinUrl);
 		
-		var doujin = await doujinService.GetAsyncId(id.ToString());
+		var doujin = await doujinService.GetAsyncId(id.ToString(), ct);
 
 		if (doujin != null)
 			return doujin;
 		
-		var (httpClient, settings) = await GetHttpClientAndSettings(settingsService,domain);
+		var (httpClient, settings) = await GetHttpClientAndSettings(ct,settingsService,domain);
 		
-		var metadata = await GetMetadata(id, token, domain, httpClient);
+		var metadata = await GetMetadata(id, token, domain, httpClient, ct);
 
-		doujin = await ConstructDoujin(metadata, settings, doujinUrl, httpClient);
+		doujin = await ConstructDoujin(metadata, settings, doujinUrl, httpClient, ct);
 
-		await doujinService.CreateAsync(doujin);
+		await doujinService.CreateAsync(doujin, ct);
 
 		return doujin;
 	}
@@ -72,11 +73,12 @@ public static class Exhentai
 	/// <param name="token">The doujin's token.</param>
 	/// <param name="domain">The doujin's domain.</param>
 	/// <param name="client">The HTTP client.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The medatada of the requested doujin.</returns>
 	/// <exception cref="ExhentaiException">If the request is bad.</exception>
-	private static async Task<MetadataDoujin> GetMetadata(int id, string token, string domain, HttpClient client)
+	private static async Task<MetadataDoujin> GetMetadata(int id, string token, string domain, HttpClient client,CancellationToken ct)
 	{
-		var url = $"https://{domain}/api.php";
+		string url = $"https://{domain}/api.php";
 
 		var apiRequest = new ApiRequest
 		{
@@ -99,9 +101,9 @@ public static class Exhentai
 		};
 
 		var response =
-			await client.PostAsync(url, new StringContent(apiRequest.ToJson(), Encoding.UTF8, "application/json"));
+			await client.PostAsync(url, new StringContent(apiRequest.ToJson(), Encoding.UTF8, "application/json"), ct);
 
-		var responseString = await response.Content.ReadAsStringAsync();
+		string responseString = await response.Content.ReadAsStringAsync(ct);
 
 		var metadata = MetadataDoujin.FromJson(responseString);
 
@@ -118,10 +120,11 @@ public static class Exhentai
 	/// <param name="metadata">The doujin's metadata</param>
 	/// <param name="settings">The bot's settings.</param>
 	///  <param name="doujinUrl">The doujin's url.</param>
+	/// <param name="ct">Cancellation token</param>
 	///  <param name="httpClient">The HTTP client.</param>
 	/// <returns>A doujin.</returns>
 	private static async Task<Doujin> ConstructDoujin(MetadataDoujin metadata, Setting settings, string doujinUrl,
-		HttpClient httpClient)
+		HttpClient httpClient, CancellationToken ct)
 	{
 		if (metadata.Gmetadata == null)
 			throw new ExhentaiException("No metadata found", (int) HttpStatusCode.BadRequest,
@@ -131,14 +134,14 @@ public static class Exhentai
 
 		var tags = metadataDoujin.Tags.Select(tag =>
 		{
-			var parts = tag.Split(':');
-			var tagValue = parts.Length > 1 ? parts[1] : parts[0];
+			string[] parts = tag.Split(':');
+			string tagValue = parts.Length > 1 ? parts[1] : parts[0];
 			// replce spaces and dashes with underscores
 			tagValue = tagValue.Replace(' ', '_').Replace('-', '_');
 			return $"#{tagValue}";
 		}).ToList();
 
-		var imageUrls = await GetImageUrls(doujinUrl, metadataDoujin.Filecount, settings, httpClient);
+		var imageUrls = await GetImageUrls(doujinUrl, metadataDoujin.Filecount, settings, httpClient, ct);
 
 		return new Doujin
 		{
@@ -164,10 +167,11 @@ public static class Exhentai
 	/// <param name="doujinUrl">The doujin's url</param>
 	/// <param name="metadataDoujinFilecount">The number of files in the doujin.</param>
 	/// <param name="settings">The bot's settings.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <param name="httpClient">The http client.</param>
 	/// <returns></returns>
 	private static async Task<List<string>> GetImageUrls(string doujinUrl, long metadataDoujinFilecount, Setting settings,
-		HttpClient httpClient)
+		HttpClient httpClient, CancellationToken ct)
 	{
 		var pageUrls = GetPageUrls(doujinUrl, metadataDoujinFilecount, settings.MaxFiles);
 
@@ -176,7 +180,7 @@ public static class Exhentai
 
 		foreach (string pageUrl in pageUrls)
 		{
-			var pageGalleryUrls = await GetPageGalleryUrls(pageUrl, httpClient);
+			var pageGalleryUrls = await GetPageGalleryUrls(pageUrl, httpClient, ct);
 			galleryUrls.AddRange(pageGalleryUrls);
 		}
 
@@ -186,7 +190,7 @@ public static class Exhentai
 		
 		for (int i = 0; i < maxUrls; i++)
 		{
-			tasks.Add(GetImageUrl(galleryUrls[i], httpClient));
+			tasks.Add(GetImageUrl(galleryUrls[i], httpClient, ct));
 		}
 		
 		imageUrls.AddRange(await Task.WhenAll(tasks));
@@ -199,12 +203,13 @@ public static class Exhentai
 	/// </summary>
 	/// <param name="galleryUrl">The gallery url.</param>
 	/// <param name="httpClient">The http client.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns></returns>
 	/// <exception cref="ExhentaiException">If the page fails to load.</exception>
-	private static async Task<string> GetImageUrl(string galleryUrl, HttpClient httpClient)
+	private static async Task<string> GetImageUrl(string galleryUrl, HttpClient httpClient, CancellationToken ct)
 	{
 		var html = new HtmlDocument();
-		html.LoadHtml(await httpClient.GetStringAsync(galleryUrl));
+		html.LoadHtml(await httpClient.GetStringAsync(galleryUrl, ct));
 		if (html.DocumentNode == null)
 			throw new ExhentaiException("Error loading gallery url", (int) HttpStatusCode.InternalServerError,
 				ExhentaiExceptionType.BadPageRequest, "");
@@ -221,11 +226,12 @@ public static class Exhentai
 	/// <param name="pageUrl">The page url</param>
 	/// <param name="httpClient">The http client.</param>
 	/// <returns>All the gallery urls for the page.</returns>
+	/// <param name="ct">Cancellation token</param>
 	/// <exception cref="ExhentaiException">If the page fails to load.</exception>
-	private static async Task<List<string>> GetPageGalleryUrls(string pageUrl, HttpClient httpClient)
+	private static async Task<List<string>> GetPageGalleryUrls(string pageUrl, HttpClient httpClient, CancellationToken ct)
 	{
 		var html = new HtmlDocument();
-		html.LoadHtml(await httpClient.GetStringAsync(pageUrl));
+		html.LoadHtml(await httpClient.GetStringAsync(pageUrl, ct));
 		if (html.DocumentNode == null)
 			throw new ExhentaiException("Error loading page url", (int) HttpStatusCode.InternalServerError,
 				ExhentaiExceptionType.BadPageRequest, "");
@@ -321,23 +327,24 @@ public static class Exhentai
 	/// </summary>
 	/// <param name="settingsService">The settings database service.</param>
 	/// <param name="tagsString">The pre-formated and parsed tags string</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>A random doujin url</returns>
 	/// <exception cref="ExhentaiException">If no doujins are found.</exception>
-	public static async Task<string> GetRandomDoujinUrl(SettingService settingsService, string tagsString)
+	public static async Task<string> GetRandomDoujinUrl(SettingService settingsService, string tagsString,CancellationToken ct)
 	{
 		// var domains = new List<string> {"https://exhentai.org", "https://e-hentai.org"};
 		// var randomDomain = domains[new Random().Next(0, domains.Count - 1)];
 		
-		var (httpClient, settings) = await GetHttpClientAndSettings(settingsService);
+		var (httpClient, settings) = await GetHttpClientAndSettings(ct,settingsService);
 		string searchUrl =
 			$"https://exhentai.org/?f_search=language:english{tagsString}&advsearch=1&f_srdd=4&f_spf=1&f_spt={settings.MaxFiles}";
-		var pageLimit = await GetPageLimit(searchUrl, httpClient);
-		var randomPrevNumber = new Random().Next(0, pageLimit - 1);
+		int pageLimit = await GetPageLimit(searchUrl, httpClient, ct);
+		int randomPrevNumber = new Random().Next(0, pageLimit - 1);
 
 		searchUrl += $"&prev={randomPrevNumber}";
 
 		var html = new HtmlDocument();
-		html.LoadHtml(await httpClient.GetStringAsync(searchUrl));
+		html.LoadHtml(await httpClient.GetStringAsync(searchUrl, ct));
 
 		var doujinUrlNodes = html.DocumentNode.SelectNodes("/html/body/div[2]/div[2]/div[4]").Descendants("a");
 
@@ -360,12 +367,13 @@ public static class Exhentai
 	/// </summary>
 	/// <param name="searchUrl">The search url.</param>
 	/// <param name="httpClient">The http client</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The first GID </returns>
 	/// <exception cref="ExhentaiException">If no doujins are found.</exception>
-	private static async Task<int> GetPageLimit(string searchUrl, HttpClient httpClient)
+	private static async Task<int> GetPageLimit(string searchUrl, HttpClient httpClient, CancellationToken ct)
 	{
 		var html = new HtmlDocument();
-		html.LoadHtml(await httpClient.GetStringAsync(searchUrl));
+		html.LoadHtml(await httpClient.GetStringAsync(searchUrl, ct));
 
 		if (html.DocumentNode == null)
 			throw new ExhentaiException("Error loading search url.", (int) HttpStatusCode.InternalServerError,
@@ -390,9 +398,9 @@ public static class Exhentai
 	///  <param name="domain">The domain to use (exhentai or e-hentai) defaults to exhentai</param>
 	/// <returns>The configured Http client and the bot's settings.</returns>
 	/// <exception cref="ExhentaiException">If no cookies are in the settings.</exception>
-	private static async Task<(HttpClient, Setting)> GetHttpClientAndSettings(SettingService settingsService,string domain = "exhentai.org")
+	private static async Task<(HttpClient, Setting)> GetHttpClientAndSettings(CancellationToken ct,SettingService settingsService,string domain = "exhentai.org")
 	{
-		var settings = await settingsService.GetAsync();
+		var settings = await settingsService.GetAsync(ct);
 
 		if (!settings.Cookies.TryGetValue(Source.Exhentai, out _) && domain == "exhentai.org")
 			throw new ExhentaiException("No cookies found for exhentai.", (int) HttpStatusCode.BadRequest,

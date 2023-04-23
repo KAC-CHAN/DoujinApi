@@ -1,5 +1,4 @@
 using DoujinApi.Models;
-using DoujinApi.Models;
 using LogLevel = DoujinApi.Models.LogLevel;
 
 namespace DoujinApi.Services;
@@ -24,17 +23,31 @@ public class LoggerService
 	/// </summary>
 	/// <param name="message">The message</param>
 	/// <param name="level">The log level</param>
-	public async Task Log(LogLevel level,string message)
+	/// <param name="ct">Cancellation token</param>
+	public async Task Log(LogLevel level,string message, CancellationToken ct)
 	{
 			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-			Log log = new Log
+			var log = new Log
 			{
 				Level = level,
 				Message = message,
 				Timestamp = timestamp
 			};
 			
-			await _logService.CreateAsync(log);
+			await _logService.CreateAsync(log, ct);
+	}
+	
+	public async Task Log(LogLevel level, string message)
+	{
+		long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+		var log = new Log
+		{
+			Level = level,
+			Message = message,
+			Timestamp = timestamp
+		};
+		
+		await _logService.CreateAsync(log);
 	}
 	
 	

@@ -41,10 +41,11 @@ public class TelegraphService
 	/// Create a telegraph page from a doujin.
 	/// </summary>
 	/// <param name="doujin">The doujin for which the telegraph page needs to be created.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The updated doujin with the new image urls/telegraph link</returns>
-	public async Task<Doujin> CreatePageAsync(Doujin doujin)
+	public async Task<Doujin> CreatePageAsync(Doujin doujin, CancellationToken ct)
 	{
-		string path = await DoujinUtils.Download(doujin);
+		string path = await DoujinUtils.Download(doujin,ct);
 
 		var imagesPaths = Directory.GetFiles(path);
 
@@ -63,7 +64,7 @@ public class TelegraphService
 
 			telegraphFiles.Add(new FileToUpload
 			{
-				Bytes = await File.ReadAllBytesAsync(imagesPath),
+				Bytes = await File.ReadAllBytesAsync(imagesPath, ct),
 				Type = "image/" + fileExtension,
 			});
 		}

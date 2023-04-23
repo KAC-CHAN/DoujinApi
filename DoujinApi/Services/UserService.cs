@@ -26,65 +26,72 @@ public class UserService
 	/// <summary>
 	/// Get all the users inside the database.
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>All the users in the database</returns>
-	public async Task<List<User>> GetAsync()
+	public async Task<List<User>> GetAsync(CancellationToken ct)
 	{
-		return await _users.Find(user => true).ToListAsync();
+		return await _users.Find(user => true).ToListAsync(cancellationToken: ct);
 	}
 
 	/// <summary>
 	/// Get the count of all the users inside the database.
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The count of all users in the database.</returns>
-	public async Task<int> GetCountAsync()
+	public async Task<int> GetCountAsync(CancellationToken ct)
 	{
-		return (int) await _users.CountDocumentsAsync(user => true);
+		return (int) await _users.CountDocumentsAsync(user => true, cancellationToken: ct);
 	}
 
 	/// <summary>
 	/// Get a user by its user id.
 	/// </summary>
 	/// <param name="userId">The telegram user id.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The user</returns>
-	public async Task<User> GetAsyncId(Int64 userId)
+	public async Task<User> GetAsyncId(Int64 userId, CancellationToken ct)
 	{
-		return await _users.Find(user => user.UserId == userId).FirstOrDefaultAsync();
+		return await _users.Find(user => user.UserId == userId).FirstOrDefaultAsync(cancellationToken: ct);
 	}
 
 	/// <summary>
 	/// Get a user by its document id.
 	/// </summary>
 	/// <param name="docId">The user's document id.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns></returns>
-	public async Task<User> GetAsyncDocId(string docId)
+	public async Task<User> GetAsyncDocId(string docId, CancellationToken ct)
 	{
-		return await _users.Find(user => user.Id == docId).FirstOrDefaultAsync();
+		return await _users.Find(user => user.Id == docId).FirstOrDefaultAsync(cancellationToken: ct);
 	}
 
 	/// <summary>
 	/// Create a user inside the database.
 	/// </summary>
 	/// <param name="user">The new user to insert in the database.</param>
-	public async Task CreateAsync(User user)
+	/// <param name="ct">Cancellation token</param>
+	public async Task CreateAsync(User user, CancellationToken ct)
 	{
-		await _users.InsertOneAsync(user);
+		await _users.InsertOneAsync(user,cancellationToken:ct);
 	}
 
 	/// <summary>
 	/// Update a user inside the database.
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <param name="user">The user to update</param>
-	public async Task UpdateAsync(User user)
+	public async Task UpdateAsync(User user, CancellationToken ct)
 	{
-		await _users.ReplaceOneAsync(u => u.Id == user.Id, user);
+		await _users.ReplaceOneAsync(u => u.Id == user.Id, user, cancellationToken: ct);
 	}
 
 	/// <summary>
 	/// Delete a user by it's document id.
 	/// </summary>
 	/// <param name="docId">The document id of the user.</param>
-	public async Task DeleteAsync(string docId)
+	/// <param name="ct">Cancellation token</param>
+	public async Task DeleteAsync(string docId, CancellationToken ct)
 	{
-		await _users.DeleteOneAsync(u => u.Id == docId);
+		await _users.DeleteOneAsync(u => u.Id == docId, cancellationToken: ct);
 	}
 }

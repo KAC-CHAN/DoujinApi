@@ -25,19 +25,21 @@ public class SettingsController
 	/// <summary>
 	/// Get the settings from the database.
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>A settings document.</returns>
 	[HttpGet]
-	public async Task<Setting> Get() => await _settingsService.GetAsync();
+	public async Task<Setting> Get(CancellationToken ct) => await _settingsService.GetAsync(ct);
 
 	/// <summary>
 	/// Update the settings document.
 	/// </summary>
 	/// <param name="setting">The settings document to update.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>200 OK on success</returns>
 	[HttpPut]
-	public async Task<IActionResult> Update(Setting setting)
+	public async Task<IActionResult> Update(Setting setting, CancellationToken ct)
 	{
-		await _settingsService.UpdateAsync(setting);
+		await _settingsService.UpdateAsync(setting, ct);
 		return new OkResult();
 	}
 
@@ -45,11 +47,12 @@ public class SettingsController
 	/// Delete the settings document.
 	/// </summary>
 	/// <param name="id">The settings document ID.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>204 No content on delete</returns>
 	[HttpDelete("{id:length(24)}")]
-	public async Task<IActionResult> Delete(string id)
+	public async Task<IActionResult> Delete(string id, CancellationToken ct)
 	{
-		await _settingsService.DeleteAsync(id);
+		await _settingsService.DeleteAsync(id, ct);
 		return new NoContentResult();
 	}
 }

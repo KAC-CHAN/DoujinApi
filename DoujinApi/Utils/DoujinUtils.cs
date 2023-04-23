@@ -15,14 +15,15 @@ public static class  DoujinUtils
 	/// Download a doujin.
 	/// </summary>
 	/// <param name="d">The doujin for which the images needs to be downloaded.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The path of the folder containing the images.</returns>
-	public static async Task<string> Download(Doujin d)
+	public static async Task<string> Download(Doujin d,CancellationToken ct)
 	{
 		string path = Path.Combine("doujins", $"{d.Source.ToString()}/{d.DoujinId}");
 
 		Directory.CreateDirectory(path);
 
-		var tasks = d.ImageUrls.Select((url, i) => DownloadImage(url, path, i)).ToList();
+		var tasks = d.ImageUrls.Select((url, i) => DownloadImage(url, path, i,ct)).ToList();
 
 		await Task.WhenAll(tasks);
 
@@ -36,8 +37,9 @@ public static class  DoujinUtils
 	/// <param name="url">The image url.</param>
 	/// <param name="path">The path where the image should be located at.</param>
 	/// <param name="index">The index for the file number.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The image path.</returns>
-	private static async Task<string> DownloadImage(string url, string path, int index)
+	private static async Task<string> DownloadImage(string url, string path, int index, CancellationToken ct)
 	{
 		using var client = new HttpClient();
 
@@ -46,7 +48,7 @@ public static class  DoujinUtils
 		byte[] result;
 		try
 		{
-			result = await client.GetByteArrayAsync(url);
+			result = await client.GetByteArrayAsync(url, ct);
 		}
 		catch (Exception e)
 		{
@@ -62,12 +64,12 @@ public static class  DoujinUtils
 				}
 			};
 			process.Start();
-			await process.WaitForExitAsync();
+			await process.WaitForExitAsync(ct);
 			
 			return filePath;
 		}
 
-		await File.WriteAllBytesAsync(filePath, result);
+		await File.WriteAllBytesAsync(filePath, result, ct);
 
 		return filePath;
 	}
@@ -77,11 +79,12 @@ public static class  DoujinUtils
 	///  Zip a doujin.
 	/// </summary>
 	/// <param name="doujin">The doujin to be ziped</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The zip file.</returns>
-	public static async Task<string> ZipDoujin(Doujin doujin)
+	public static async Task<string> ZipDoujin(Doujin doujin, CancellationToken ct)
 	{
-		string downloadFolderPath = await Download(doujin);
-		await CreateDescriptorFile(doujin, downloadFolderPath);
+		string downloadFolderPath = await Download(doujin, ct);
+		await CreateDescriptorFile(doujin, downloadFolderPath, ct);
 		string zipFolderPath = Path.Combine("zips", $"{doujin.Source.ToString()}");
 		Directory.CreateDirectory(zipFolderPath);
 		string zipFilePath = Path.Combine(zipFolderPath, $"{doujin.DoujinId}.zip");
@@ -97,14 +100,15 @@ public static class  DoujinUtils
 	/// </summary>
 	/// <param name="doujin"> The doujin for which the descriptor file needs to be created.</param>
 	/// <param name="filePath"> The path where the descriptor file should be located at.</param>
-	private static async Task CreateDescriptorFile(Doujin doujin, string filePath)
+	/// <param name="ct">Cancellation token</param>
+	private static async Task CreateDescriptorFile(Doujin doujin, string filePath, CancellationToken ct)
 	{
 		string descriptorText =
 			$"Title : {doujin.Title}\nRating : {doujin.Rating}\nCategory : {doujin.Category}\nTags : " +
 			$"{string.Join(" ", doujin.Tags)}\nOriginal URL : {doujin.Url}\nTelegraph URL : {doujin.TelegraphUrl}\n" +
 			$"Posted : {ConvertUnixTimestampToDateString(doujin.Posted)}";
 		
-		await File.WriteAllTextAsync($"{filePath}/{doujin.DoujinId}.txt",descriptorText);
+		await File.WriteAllTextAsync($"{filePath}/{doujin.DoujinId}.txt",descriptorText, ct);
 	}
 
 	/// <summary>
@@ -125,10 +129,10 @@ public static class  DoujinUtils
 	public static bool CleanUpWorkDirs()
 	{
 		// Delete doujins folder and zips folder
-		DirectoryInfo doujinsDir = new DirectoryInfo("doujins");
-		DirectoryInfo zipsDir = new DirectoryInfo("zips");
-		foreach (DirectoryInfo dir in doujinsDir.GetDirectories()) dir.Delete(true);
-		foreach (DirectoryInfo dir in zipsDir.GetDirectories()) dir.Delete(true);
+		var doujinsDir = new DirectoryInfo("doujins");
+		var zipsDir = new DirectoryInfo("zips");
+		foreach (var dir in doujinsDir.GetDirectories()) dir.Delete(true);
+		foreach (var dir in zipsDir.GetDirectories()) dir.Delete(true);
 		return true;
 	}
 	

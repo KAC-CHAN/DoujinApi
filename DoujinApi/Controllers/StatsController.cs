@@ -25,11 +25,12 @@ public class StatsController
 	/// <summary>
 	/// Get the stats.
 	/// </summary>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>The stats document.</returns>
 	[HttpGet]
-	public async Task<Stats> Get()
+	public async Task<Stats> Get(CancellationToken ct)
 	{
-		var stats = await _statsService.GetAsync();
+		var stats = await _statsService.GetAsync(ct);
 		return stats;
 	}
 	
@@ -37,11 +38,12 @@ public class StatsController
 	/// Update the stats.
 	/// </summary>
 	/// <param name="stats">The updated stats.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns>200 OK on sucess.</returns>
 	[HttpPut]
-	public async Task<IActionResult> Update(Stats stats)
+	public async Task<IActionResult> Update(Stats stats, CancellationToken ct)
 	{
-		await _statsService.UpdateAsync(stats);
+		await _statsService.UpdateAsync(stats, ct);
 		return new OkResult();
 	}	
 	
@@ -49,16 +51,17 @@ public class StatsController
 	/// Delete the stats.
 	/// </summary>
 	/// <param name="id">The stats's document ID.</param>
+	/// <param name="ct">Cancellation token</param>
 	/// <returns></returns>
 	[HttpDelete("{id:length(24)}")]
-	public async Task<IActionResult> Delete(string id)
+	public async Task<IActionResult> Delete(string id, CancellationToken ct)
 	{
-		var stats = await _statsService.GetAsync();
+		var stats = await _statsService.GetAsync(ct);
 		if (stats == null)
 		{
 			return new NotFoundResult();
 		}
-		await _statsService.DeleteAsync(stats.Id);
+		await _statsService.DeleteAsync(stats.Id!, ct);
 		return new NoContentResult();
 	}
 	

@@ -1,6 +1,6 @@
 version: '3'
 services:
-  api:
+  douapi:
     build:
       context: .
       dockerfile: Dockerfile
